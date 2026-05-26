@@ -28,6 +28,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.naltech.kasiva.pos.feature.auth.LoginScreen
+import com.naltech.kasiva.pos.feature.splash.SplashScreen
 import com.naltech.kasiva.pos.feature.transaction.TransactionScreen
 import com.naltech.kasiva.pos.ui.dashboard.DashboardScreen
 import com.naltech.kasiva.pos.ui.dashboard.DashboardViewModel
@@ -48,7 +50,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AndroidkasivaposTheme {
                 val app = LocalContext.current.applicationContext as KasivaApp
-                val backStack = remember { mutableStateListOf<NavKey>(NavKey.POS) }
+                val backStack = remember { mutableStateListOf<NavKey>(NavKey.Splash) }
 
                 val windowAdaptiveInfo = currentWindowAdaptiveInfo()
                 val directive = remember(windowAdaptiveInfo) {
@@ -109,6 +111,22 @@ class MainActivity : ComponentActivity() {
                                 rememberViewModelStoreNavEntryDecorator()
                             ),
                             entryProvider = entryProvider {
+                                entry<NavKey.Splash> {
+                                    SplashScreen(
+                                        onTimeout = {
+                                            backStack.clear()
+                                            backStack.add(NavKey.Login)
+                                        }
+                                    )
+                                }
+                                entry<NavKey.Login> {
+                                    LoginScreen(
+                                        onLoginSuccess = {
+                                            backStack.clear()
+                                            backStack.add(NavKey.POS)
+                                        }
+                                    )
+                                }
                                 entry<NavKey.Dashboard> {
                                     val dashboardViewModel: DashboardViewModel = viewModel(
                                         factory = DashboardViewModel.Factory(app.inventoryRepository, app.transactionRepository)
@@ -134,9 +152,8 @@ class MainActivity : ComponentActivity() {
                                     val viewModel: InventoryViewModel = viewModel(
                                         factory = InventoryViewModel.Factory(app.inventoryRepository)
                                     )
-                                    val products by viewModel.products.collectAsState()
                                     ProductListScreen(
-                                        products = products,
+                                        viewModel = viewModel,
                                         onProductClick = { backStack.add(NavKey.ProductDetail(it)) },
                                         onAddProduct = { backStack.add(NavKey.ProductDetail(null)) },
                                         onDeleteProduct = { viewModel.deleteProduct(it) },
