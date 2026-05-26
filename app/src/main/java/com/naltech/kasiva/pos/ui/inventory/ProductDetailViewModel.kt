@@ -30,8 +30,12 @@ class ProductDetailViewModel(
                             id = product.id,
                             name = product.name,
                             sku = product.sku,
+                            buyPrice = product.buyPrice.toString(),
                             price = product.price.toString(),
                             stock = product.stock.toString(),
+                            unit = product.unit,
+                            description = product.description,
+                            rackLocation = product.rackLocation,
                             categoryId = product.categoryId,
                             imageUrl = product.imageUrl
                         )
@@ -43,8 +47,12 @@ class ProductDetailViewModel(
 
     fun onNameChange(name: String) = _uiState.update { it.copy(name = name) }
     fun onSkuChange(sku: String) = _uiState.update { it.copy(sku = sku) }
+    fun onBuyPriceChange(price: String) = _uiState.update { it.copy(buyPrice = price) }
     fun onPriceChange(price: String) = _uiState.update { it.copy(price = price) }
     fun onStockChange(stock: String) = _uiState.update { it.copy(stock = stock) }
+    fun onUnitChange(unit: String) = _uiState.update { it.copy(unit = unit) }
+    fun onDescriptionChange(description: String) = _uiState.update { it.copy(description = description) }
+    fun onRackLocationChange(location: String) = _uiState.update { it.copy(rackLocation = location) }
     fun onCategoryChange(categoryId: Long) = _uiState.update { it.copy(categoryId = categoryId) }
 
     fun saveProduct() {
@@ -53,8 +61,12 @@ class ProductDetailViewModel(
             id = state.id,
             name = state.name,
             sku = state.sku,
+            buyPrice = state.buyPrice.toDoubleOrNull() ?: 0.0,
             price = state.price.toDoubleOrNull() ?: 0.0,
             stock = state.stock.toIntOrNull() ?: 0,
+            unit = state.unit,
+            description = state.description,
+            rackLocation = state.rackLocation,
             categoryId = state.categoryId,
             imageUrl = state.imageUrl
         )
@@ -77,8 +89,12 @@ data class ProductDetailUiState(
     val id: Long = 0,
     val name: String = "",
     val sku: String = "",
+    val buyPrice: String = "",
     val price: String = "",
     val stock: String = "",
+    val unit: String = "Pcs",
+    val description: String = "",
+    val rackLocation: String = "",
     val categoryId: Long = 0,
     val imageUrl: String? = null
 )
