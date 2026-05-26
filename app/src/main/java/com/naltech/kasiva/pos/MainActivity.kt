@@ -28,6 +28,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.naltech.kasiva.pos.feature.transaction.TransactionScreen
 import com.naltech.kasiva.pos.ui.dashboard.DashboardScreen
 import com.naltech.kasiva.pos.ui.dashboard.DashboardViewModel
 import com.naltech.kasiva.pos.ui.inventory.*
@@ -115,10 +116,7 @@ class MainActivity : ComponentActivity() {
                                     DashboardScreen(viewModel = dashboardViewModel)
                                 }
                                 entry<NavKey.POS> {
-                                    POSScreen(
-                                        viewModel = sharedPosViewModel,
-                                        onCheckout = { backStack.add(NavKey.Checkout) }
-                                    )
+                                    TransactionScreen()
                                 }
                                 entry<NavKey.Checkout> {
                                     CheckoutScreen(
