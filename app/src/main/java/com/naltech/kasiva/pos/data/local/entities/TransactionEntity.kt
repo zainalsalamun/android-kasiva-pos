@@ -9,6 +9,9 @@ import kotlinx.serialization.Serializable
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val timestamp: Long = System.currentTimeMillis(),
+    val subtotal: Double = 0.0,
+    val tax: Double = 0.0,
+    val discount: Double = 0.0,
     val totalAmount: Double,
     val paymentMethod: String,
     val isSynced: Boolean = false
