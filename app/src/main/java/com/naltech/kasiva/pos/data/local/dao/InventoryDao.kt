@@ -10,6 +10,9 @@ interface InventoryDao {
     @Query("SELECT * FROM products")
     fun getAllProducts(): Flow<List<ProductEntity>>
 
+    @Query("SELECT COUNT(*) FROM products")
+    suspend fun getProductCount(): Int
+
     @Query("SELECT * FROM products WHERE id = :id")
     suspend fun getProductById(id: Long): ProductEntity?
 
@@ -18,6 +21,9 @@ interface InventoryDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProduct(product: ProductEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertProducts(products: List<ProductEntity>)
 
     @Update
     suspend fun updateProduct(product: ProductEntity)
@@ -28,8 +34,14 @@ interface InventoryDao {
     @Query("SELECT * FROM categories")
     fun getAllCategories(): Flow<List<CategoryEntity>>
 
+    @Query("SELECT COUNT(*) FROM categories")
+    suspend fun getCategoryCount(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCategory(category: CategoryEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCategories(categories: List<CategoryEntity>)
 
     @Delete
     suspend fun deleteCategory(category: CategoryEntity)
