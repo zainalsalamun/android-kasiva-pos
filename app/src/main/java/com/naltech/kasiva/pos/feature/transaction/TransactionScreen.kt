@@ -92,7 +92,7 @@ private fun TransactionContent(
             
             ProductGridSection(
                 products = uiState.products.filter { 
-                    uiState.selectedCategory == "All" || it.category == uiState.selectedCategory 
+                    uiState.selectedCategory == "Semua" || it.category == uiState.selectedCategory
                 },
                 onProductClick = onProductClick
             )
