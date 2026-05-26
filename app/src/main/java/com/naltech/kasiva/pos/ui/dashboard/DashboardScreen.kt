@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -45,7 +47,7 @@ fun DashboardScreen(
             TopAppBar(
                 title = { 
                     Column {
-                        Text("Hi, Bang Zai 👋", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text("Hi, Bang Zai", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         Text("Selamat datang di Kasiva POS", fontSize = 12.sp, color = Color.Gray)
                     }
                 },
@@ -83,118 +85,46 @@ fun DashboardScreen(
         },
         containerColor = SoftBlueBg
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            // KPI Summary Row
+        BoxWithConstraints(modifier = Modifier.padding(padding).fillMaxSize()) {
+            val isCompact = maxWidth < 720.dp
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(if (isCompact) 12.dp else 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    SummaryCard(
-                        title = "Total Penjualan",
-                        value = "Rp 12.450.000",
-                        subValue = "▲ 12% dari kemarin",
-                        subValueColor = SuccessGreen,
-                        icon = Icons.AutoMirrored.Filled.TrendingUp,
-                        iconColor = LightBlue,
-                        modifier = Modifier.weight(1f)
-                    )
-                    SummaryCard(
-                        title = "Total Transaksi",
-                        value = "156",
-                        subValue = "▲ 8% dari kemarin",
-                        subValueColor = SuccessGreen,
-                        icon = Icons.Default.ShoppingCart,
-                        iconColor = SuccessGreen,
-                        modifier = Modifier.weight(1f)
-                    )
-                    SummaryCard(
-                        title = "Produk",
-                        value = "1.234",
-                        subValue = "Semua produk",
-                        icon = Icons.Default.Inventory2,
-                        iconColor = BlueAccent,
-                        modifier = Modifier.weight(1f)
-                    )
-                    SummaryCard(
-                        title = "Stok Menipis",
-                        value = "23",
-                        subValue = "Perlu restock",
-                        subValueColor = ErrorRed,
-                        icon = Icons.Default.Warning,
-                        iconColor = WarningOrange,
-                        modifier = Modifier.weight(1f)
-                    )
+                if (isCompact) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            DashboardSummaryCards(uiState, Modifier.weight(1f), Modifier.weight(1f), 0)
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            DashboardSummaryCards(uiState, Modifier.weight(1f), Modifier.weight(1f), 2)
+                        }
+                    }
+                } else {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        DashboardSummaryCards(uiState, Modifier.weight(1f), Modifier.weight(1f), 0)
+                        DashboardSummaryCards(uiState, Modifier.weight(1f), Modifier.weight(1f), 2)
+                    }
                 }
             }
 
-            // Charts and Top Products
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().height(320.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Sales Chart Card
-                    Card(
-                        modifier = Modifier.weight(1.5f).fillMaxHeight(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        border = BorderStroke(1.dp, BorderColor),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Penjualan 7 Hari Terakhir", fontWeight = FontWeight.Bold)
-                                Surface(
-                                    border = BorderStroke(1.dp, BorderColor),
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = Color.White,
-                                    onClick = {}
-                                ) {
-                                    Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Text("7 Hari", fontSize = 12.sp)
-                                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    }
-                                }
-                            }
-                            Spacer(Modifier.height(16.dp))
-                            // Simple Chart Placeholder
-                            Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF1F5F9), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                                Text("Chart Visualization", color = Color.Gray)
-                            }
-                        }
+                if (isCompact) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        SalesChartCard(uiState.salesHistory, Modifier.fillMaxWidth().height(260.dp))
+                        TopProductsCard(uiState.topProducts, Modifier.fillMaxWidth())
                     }
-
-                    // Top Products Card
-                    Card(
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        border = BorderStroke(1.dp, BorderColor),
-                        shape = RoundedCornerShape(16.dp)
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(320.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Produk Terlaris", fontWeight = FontWeight.Bold)
-                                Text("Lihat semua", color = BlueAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            }
-                            Spacer(Modifier.height(12.dp))
-                            uiState.topProducts.take(5).forEachIndexed { index, product ->
-                                TopProductRow(rank = index + 1, product = product)
-                            }
-                        }
+                        SalesChartCard(uiState.salesHistory, Modifier.weight(1.5f).fillMaxHeight())
+                        TopProductsCard(uiState.topProducts, Modifier.weight(1f).fillMaxHeight())
                     }
                 }
             }
@@ -235,6 +165,126 @@ fun DashboardScreen(
                     }
                 }
             }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.DashboardSummaryCards(
+    uiState: DashboardUiState,
+    firstModifier: Modifier,
+    secondModifier: Modifier,
+    startIndex: Int
+) {
+    val cards = listOf(
+        Triple("Total Penjualan", "Rp 12.450.000", Icons.AutoMirrored.Filled.TrendingUp),
+        Triple("Total Transaksi", uiState.transactionCount.toString(), Icons.Default.ShoppingCart),
+        Triple("Produk", uiState.productCount.toString(), Icons.Default.Inventory2),
+        Triple("Stok Menipis", uiState.lowStockCount.toString(), Icons.Default.Warning)
+    )
+    val subValues = listOf("▲ 12% dari kemarin", "▲ 8% dari kemarin", "Semua produk", "Perlu restock")
+    val iconColors = listOf(LightBlue, SuccessGreen, Color(0xFF6D28D9), WarningOrange)
+    val subColors = listOf(SuccessGreen, SuccessGreen, Color.Gray, ErrorRed)
+
+    SummaryCard(
+        title = cards[startIndex].first,
+        value = cards[startIndex].second,
+        subValue = subValues[startIndex],
+        subValueColor = subColors[startIndex],
+        icon = cards[startIndex].third,
+        iconColor = iconColors[startIndex],
+        modifier = firstModifier
+    )
+    SummaryCard(
+        title = cards[startIndex + 1].first,
+        value = cards[startIndex + 1].second,
+        subValue = subValues[startIndex + 1],
+        subValueColor = subColors[startIndex + 1],
+        icon = cards[startIndex + 1].third,
+        iconColor = iconColors[startIndex + 1],
+        modifier = secondModifier
+    )
+}
+
+@Composable
+private fun SalesChartCard(points: List<SalesPoint>, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, BorderColor),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Penjualan 7 Hari Terakhir", fontWeight = FontWeight.Bold)
+                AssistChip(onClick = {}, label = { Text("7 Hari") }, trailingIcon = {
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                })
+            }
+            Spacer(Modifier.height(12.dp))
+            LineChart(points = points, modifier = Modifier.fillMaxSize())
+        }
+    }
+}
+
+@Composable
+private fun TopProductsCard(products: List<TopProduct>, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, BorderColor),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Produk Terlaris", fontWeight = FontWeight.Bold)
+                Text("Lihat semua", color = BlueAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            }
+            Spacer(Modifier.height(12.dp))
+            products.take(5).forEachIndexed { index, product ->
+                TopProductRow(rank = index + 1, product = product)
+            }
+        }
+    }
+}
+
+@Composable
+private fun LineChart(points: List<SalesPoint>, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.background(Color(0xFFF8FAFC), RoundedCornerShape(10.dp)).padding(12.dp)) {
+        if (points.isEmpty()) return@Canvas
+        val left = 42.dp.toPx()
+        val right = size.width - 16.dp.toPx()
+        val top = 18.dp.toPx()
+        val bottom = size.height - 30.dp.toPx()
+        val maxValue = (points.maxOfOrNull { it.value } ?: 1.0).coerceAtLeast(1.0)
+
+        repeat(4) { index ->
+            val y = top + (bottom - top) * index / 3f
+            drawLine(Color(0xFFE2E8F0), androidx.compose.ui.geometry.Offset(left, y), androidx.compose.ui.geometry.Offset(right, y), 1.dp.toPx())
+        }
+
+        val coordinates = points.mapIndexed { index, point ->
+            val x = left + (right - left) * index / (points.lastIndex.coerceAtLeast(1)).toFloat()
+            val y = bottom - ((point.value / maxValue).toFloat() * (bottom - top))
+            androidx.compose.ui.geometry.Offset(x, y)
+        }
+        val path = Path().apply {
+            moveTo(coordinates.first().x, coordinates.first().y)
+            coordinates.drop(1).forEach { lineTo(it.x, it.y) }
+        }
+        drawPath(path, BlueAccent, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+        coordinates.forEach { point ->
+            drawCircle(Color.White, 5.dp.toPx(), point)
+            drawCircle(BlueAccent, 3.dp.toPx(), point)
         }
     }
 }

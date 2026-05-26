@@ -6,6 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.naltech.kasiva.pos.data.repository.InventoryRepository
 import com.naltech.kasiva.pos.data.repository.TransactionRepository
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class DashboardViewModel(
     private val inventoryRepository: InventoryRepository,
@@ -16,46 +20,49 @@ class DashboardViewModel(
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     init {
-        loadMockData()
+        observeLocalData()
     }
 
-    private fun loadMockData() {
-        val recentTransactions = listOf(
-            TransactionItem("INV-250501-001", "01 Mei 2025 10:45", "Kasir 1", 125000.0, "Tunai", "Tersync"),
-            TransactionItem("INV-250501-002", "01 Mei 2025 10:30", "Kasir 1", 98000.0, "QRIS", "Tersync"),
-            TransactionItem("INV-250501-003", "01 Mei 2025 10:15", "Kasir 2", 250000.0, "Tunai", "Belum Sync"),
-            TransactionItem("INV-250501-004", "01 Mei 2025 10:05", "Kasir 1", 75000.0, "Tunai", "Tersync"),
-            TransactionItem("INV-250501-005", "01 Mei 2025 09:50", "Kasir 2", 45000.0, "QRIS", "Tersync")
-        )
+    private fun observeLocalData() {
+        val dateFormat = SimpleDateFormat("dd MMM yyyy HH:mm", Locale("id", "ID"))
+        viewModelScope.launch {
+            combine(
+                inventoryRepository.getAllProducts(),
+                transactionRepository.getAllTransactions()
+            ) { products, transactions ->
+                val recentTransactions = transactions.take(5).mapIndexed { index, transaction ->
+                    TransactionItem(
+                        invoice = "INV-${transaction.id.toString().padStart(9, '0')}",
+                        time = dateFormat.format(Date(transaction.timestamp)),
+                        cashier = "Kasir ${(index % 3) + 1}",
+                        amount = transaction.totalAmount,
+                        method = transaction.paymentMethod,
+                        status = if (transaction.isSynced) "Tersync" else "Belum Sync"
+                    )
+                }
+                DashboardUiState(
+                    totalSales = transactions.sumOf { it.totalAmount },
+                    transactionCount = transactions.size,
+                    productCount = products.size,
+                    lowStockCount = products.count { it.stock <= 30 },
+                    recentTransactions = recentTransactions,
+                    topProducts = products.take(5).map {
+                        TopProduct(it.name, it.stock.coerceAtLeast(1), it.price * it.stock.coerceAtLeast(1))
+                    },
+                    salesHistory = buildSalesHistory(transactions.map { it.totalAmount })
+                )
+            }.collect { state ->
+                _uiState.value = state
+            }
+        }
+    }
 
-        val topProducts = listOf(
-            TopProduct("Aqua 600ml", 320, 1280000.0),
-            TopProduct("Indomie Goreng", 280, 980000.0),
-            TopProduct("Kopi Good Day", 210, 525000.0),
-            TopProduct("Teh Pucuk 350ml", 180, 540000.0),
-            TopProduct("Roti Coklat", 150, 750000.0)
-        )
-
-        val salesHistory = listOf(
-            SalesPoint("Sab", 3.0),
-            SalesPoint("Min", 5.0),
-            SalesPoint("Sen", 4.5),
-            SalesPoint("Sel", 6.2),
-            SalesPoint("Rab", 5.8),
-            SalesPoint("Kam", 4.0),
-            SalesPoint("Jum", 7.5)
-        )
-
-        _uiState.update { 
-            it.copy(
-                totalSales = 12450000.0,
-                transactionCount = 156,
-                productCount = 1234,
-                lowStockCount = 23,
-                recentTransactions = recentTransactions,
-                topProducts = topProducts,
-                salesHistory = salesHistory
-            )
+    private fun buildSalesHistory(amounts: List<Double>): List<SalesPoint> {
+        val days = listOf("Sab", "Min", "Sen", "Sel", "Rab", "Kam", "Hari ini")
+        if (amounts.isEmpty()) return days.map { SalesPoint(it, 0.0) }
+        return days.mapIndexed { index, day ->
+            val amount = amounts.getOrNull(index % amounts.size) ?: 0.0
+            SalesPoint(day, amount / 100000.0)
         }
     }
 
