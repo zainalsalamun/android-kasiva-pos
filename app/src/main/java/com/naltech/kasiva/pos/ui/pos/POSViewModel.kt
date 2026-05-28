@@ -22,20 +22,53 @@ class POSViewModel(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    private val _selectedCategory = MutableStateFlow<Long?>(null)
+    val selectedCategory = _selectedCategory.asStateFlow()
+
+    private val _discount = MutableStateFlow(0.0)
+    val discount = _discount.asStateFlow()
+
+    val categories = inventoryRepository.getAllCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val products: StateFlow<List<ProductEntity>> = combine(
         inventoryRepository.getAllProducts(),
-        _searchQuery
-    ) { products, query ->
-        if (query.isBlank()) products
-        else products.filter { it.name.contains(query, ignoreCase = true) || it.sku.contains(query) }
+        _searchQuery,
+        _selectedCategory
+    ) { products, query, categoryId ->
+        var filtered = products
+        if (query.isNotBlank()) {
+            filtered = filtered.filter { it.name.contains(query, ignoreCase = true) || it.sku.contains(query) }
+        }
+        if (categoryId != null) {
+            filtered = filtered.filter { it.categoryId == categoryId }
+        }
+        filtered
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val totalAmount: StateFlow<Double> = _cartItems.map { items ->
+    val subtotal: StateFlow<Double> = _cartItems.map { items ->
         items.sumOf { it.totalPrice }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val taxRate = 0.10 // 10% tax as per design
+
+    val taxAmount: StateFlow<Double> = subtotal.map { it * taxRate }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val finalTotal: StateFlow<Double> = combine(subtotal, taxAmount, _discount) { sub, tax, disc ->
+        (sub + tax - disc).coerceAtLeast(0.0)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
+    }
+
+    fun onCategoryChange(categoryId: Long?) {
+        _selectedCategory.value = categoryId
+    }
+
+    fun onDiscountChange(amount: String) {
+        _discount.value = amount.toDoubleOrNull() ?: 0.0
     }
 
     fun addToCart(product: ProductEntity) {
@@ -82,7 +115,10 @@ class POSViewModel(
 
         viewModelScope.launch {
             val transaction = TransactionEntity(
-                totalAmount = items.sumOf { it.totalPrice },
+                subtotal = subtotal.value,
+                tax = taxAmount.value,
+                discount = _discount.value,
+                totalAmount = finalTotal.value,
                 paymentMethod = paymentMethod
             )
             val transactionItems = items.map {
