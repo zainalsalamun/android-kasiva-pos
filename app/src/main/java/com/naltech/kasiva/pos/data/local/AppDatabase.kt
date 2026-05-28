@@ -16,7 +16,7 @@ import com.naltech.kasiva.pos.data.local.entities.TransactionItemEntity
         TransactionEntity::class,
         TransactionItemEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
