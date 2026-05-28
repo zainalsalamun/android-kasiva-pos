@@ -30,7 +30,7 @@ fun CheckoutScreen(
     val printerService = remember { BluetoothPrinterService(context) }
     
     val cartItems by viewModel.cartItems.collectAsState()
-    val totalAmount by viewModel.totalAmount.collectAsState()
+    val finalTotal by viewModel.finalTotal.collectAsState()
     var selectedPaymentMethod by remember { mutableStateOf("Cash") }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
@@ -74,7 +74,7 @@ fun CheckoutScreen(
             ) {
                 Text("Total Amount", style = MaterialTheme.typography.headlineSmall)
                 Text(
-                    text = totalAmount.formatCurrency(),
+                    text = finalTotal.formatCurrency(),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -135,7 +135,7 @@ fun CheckoutScreen(
                                 receipt.append("   ${item.totalPrice.formatCurrency()}\n")
                             }
                             receipt.append("----------------\n")
-                            receipt.append("Total: ${totalAmount.formatCurrency()}\n")
+                            receipt.append("Total: ${finalTotal.formatCurrency()}\n")
                             receipt.append("Payment: $selectedPaymentMethod\n")
                             receipt.append("\nThank you!\n")
                             
