@@ -46,6 +46,7 @@ fun ProductListScreen(
     val products by viewModel.products.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
+    val categories by viewModel.categories.collectAsState()
 
     Scaffold(
         topBar = {
@@ -53,83 +54,95 @@ fun ProductListScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                BoxWithConstraints {
+                    val isCompact = maxWidth < 600.dp
                     Column {
-                        Text(
-                            text = "Produk",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                        Text(
-                            text = "Kelola semua produk toko Anda",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
-                    Button(
-                        onClick = onAddProduct,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = BlueAccent),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Tambah Produk", fontWeight = FontWeight.Bold)
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(20.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = viewModel::onSearchQueryChange,
-                        placeholder = { Text("Cari produk / barcode / nama", color = Color.Gray) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(52.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFFF1F5F9),
-                            focusedContainerColor = Color(0xFFF1F5F9),
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = BlueAccent
-                        )
-                    )
-                    
-                    OutlinedButton(
-                        onClick = { },
-                        modifier = Modifier.height(52.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, BlueAccent.copy(alpha = 0.3f)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = BlueAccent)
-                    ) {
-                        Icon(Icons.Outlined.QrCodeScanner, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Scan Barcode", fontWeight = FontWeight.SemiBold)
-                    }
-                    
-                    Surface(
-                        modifier = Modifier.size(52.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, BorderColor),
-                        color = Color.White,
-                        onClick = onManageCategories
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Tune, contentDescription = null, tint = Color.Gray)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Produk",
+                                    fontSize = if (isCompact) 20.sp else 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                if (!isCompact) {
+                                    Text(
+                                        text = "Kelola semua produk toko Anda",
+                                        fontSize = 14.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                            Button(
+                                onClick = onAddProduct,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = BlueAccent),
+                                contentPadding = PaddingValues(horizontal = if (isCompact) 12.dp else 16.dp, vertical = 10.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                                if (!isCompact) {
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Tambah Produk", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = viewModel::onSearchQueryChange,
+                                placeholder = { Text("Cari produk / barcode / nama", color = Color.Gray, maxLines = 1) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedContainerColor = Color(0xFFF1F5F9),
+                                    focusedContainerColor = Color(0xFFF1F5F9),
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedBorderColor = BlueAccent
+                                )
+                            )
+
+                            OutlinedButton(
+                                onClick = { },
+                                modifier = Modifier.height(52.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, BlueAccent.copy(alpha = 0.3f)),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = BlueAccent),
+                                contentPadding = PaddingValues(horizontal = if (isCompact) 14.dp else 16.dp)
+                            ) {
+                                Icon(Icons.Outlined.QrCodeScanner, contentDescription = null, modifier = Modifier.size(20.dp))
+                                if (!isCompact) {
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Scan Barcode", fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+
+                            Surface(
+                                modifier = Modifier.size(52.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, BorderColor),
+                                color = Color.White,
+                                onClick = onManageCategories
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Default.Tune, contentDescription = null, tint = Color.Gray)
+                                }
+                            }
                         }
                     }
                 }
@@ -142,7 +155,7 @@ fun ProductListScreen(
                 ) {
                     // Use a unique name for items to avoid confusion if necessary, 
                     // but standard import from foundation.lazy works for LazyRow
-                    this.items(items = viewModel.categories) { category ->
+                    this.items(items = categories) { category ->
                         val isSelected = category == selectedCategory
                         Surface(
                             onClick = { viewModel.onCategoryChange(category) },
@@ -167,10 +180,10 @@ fun ProductListScreen(
                 .fillMaxSize()
         ) {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(180.dp),
-                contentPadding = PaddingValues(24.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                columns = GridCells.Adaptive(150.dp),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 items(products) { product ->
