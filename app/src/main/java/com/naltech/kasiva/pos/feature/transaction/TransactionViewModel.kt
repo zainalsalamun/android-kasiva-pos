@@ -2,6 +2,7 @@ package com.naltech.kasiva.pos.feature.transaction
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.naltech.kasiva.pos.data.local.entities.ProductEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,23 +20,28 @@ class TransactionViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun loadDummyData() {
-        val dummyProducts = listOf(
-            Product("1", "Aqua 600ml", 4.0, "Minuman"),
-            Product("2", "Indomie Goreng", 3.0, "Makanan"),
-            Product("3", "Indomie Soto", 3.0, "Makanan"),
-            Product("4", "Kopi Good Day", 2.0, "Minuman"),
-            Product("5", "Roti Coklat", 5.0, "Makanan"),
-            Product("6", "Gula Pasir 1kg", 13.0, "Sembako"),
-            Product("7", "Teh Pucuk 350ml", 3.5, "Minuman"),
-            Product("8", "Susu Ultra 250ml", 6.0, "Minuman"),
-            Product("9", "Chitato 68g", 7.0, "Makanan")
-        )
         _uiState.update { 
             it.copy(
-                products = dummyProducts,
                 categories = listOf("Semua", "Minuman", "Makanan", "Sembako", "Lainnya"),
                 selectedCategory = "Semua"
             ) 
+        }
+    }
+
+    fun setLocalProducts(products: List<ProductEntity>) {
+        _uiState.update { state ->
+            state.copy(
+                products = products.map {
+                    Product(
+                        id = it.id.toString(),
+                        name = it.name,
+                        price = it.price,
+                        category = categoryName(it.categoryId),
+                        imageUrl = it.imageUrl
+                    )
+                },
+                categories = listOf("Semua", "Minuman", "Makanan", "Sembako", "Snack", "Kebersihan", "Lainnya")
+            )
         }
     }
 
@@ -72,5 +78,14 @@ class TransactionViewModel @Inject constructor() : ViewModel() {
 
     fun clearCart() {
         _uiState.update { it.copy(cartItems = emptyList()) }
+    }
+
+    private fun categoryName(categoryId: Long): String = when (categoryId) {
+        1L -> "Minuman"
+        2L -> "Makanan"
+        3L -> "Sembako"
+        4L -> "Snack"
+        5L -> "Kebersihan"
+        else -> "Lainnya"
     }
 }
