@@ -3,13 +3,17 @@ package com.naltech.kasiva.pos
 import android.app.Application
 import androidx.room.Room
 import com.naltech.kasiva.pos.data.local.AppDatabase
+import com.naltech.kasiva.pos.data.local.LocalDataSeeder
 import com.naltech.kasiva.pos.data.repository.InventoryRepository
 import com.naltech.kasiva.pos.data.repository.TransactionRepository
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @HiltAndroidApp
 class KasivaApp : Application() {
-    private val database: AppDatabase by lazy {
+    val database: AppDatabase by lazy {
         Room.databaseBuilder(
             this,
             AppDatabase::class.java,
@@ -27,6 +31,9 @@ class KasivaApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        CoroutineScope(Dispatchers.IO).launch {
+            LocalDataSeeder.seedIfEmpty(database)
+        }
         com.naltech.kasiva.pos.util.SyncManager.startPeriodicSync(this)
     }
 }
